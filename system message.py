@@ -1,0 +1,316 @@
+from openai import OpenAI
+import json
+
+# OpenRouter configuration using OpenAI client
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key="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",
+)
+
+# Database schema as proper Python dictionary
+database_schema = {
+    "tabquotation" : [
+        "base_grand_total", "base_rounding_adjustment", "base_rounded_total", "valid_till", "group_same_items",
+        "grand_total", "rounding_adjustment", "rounded_total", "plc_conversion_rate", "ignore_pricing_rule",
+        "base_discount_amount", "modified", "additional_discount_percentage", "discount_amount", "total_qty",
+        "total_net_weight", "base_total", "base_net_total", "total", "net_total",
+        "docstatus", "idx", "creation", "conversion_rate", "transaction_date",
+        "base_total_taxes_and_charges", "total_taxes_and_charges", "custom_is_co_created", "is_so_creating", "contact_display",
+        "contact_mobile", "contact_email", "shipping_address_name", "shipping_address", "company_address",
+        "company_address_display", "payment_terms_template", "tc_name", "terms", "auto_repeat",
+        "letter_head", "select_print_heading", "language", "order_lost_reason", "status",
+        "customer_group", "territory", "campaign", "source", "opportunity",
+        "supplier_quotation", "name",
+        "branch_and_division_code", "division", "branch", "warehouse",
+        "salesman", "customer_po_number", "sfa_reference_number", "title", "naming_series", "quotation_to", "party_name",
+        "customer_name", "order_type", "company", "amended_from", "currency",
+        "selling_price_list", "price_list_currency", "scan_barcode", "tax_category", "taxes_and_charges",
+        "shipping_rule", "apply_discount_on", "coupon_code", "referral_sales_partner", "other_charges_calculation", "customer_address",
+        "address_display", "contact_person"
+    ],
+    "tabquotation item" : [
+        "actual_qty", "creation", "modified", "discount_percentage", "discount_amount",
+        "base_rate_with_margin", "rate", "net_rate", "amount", "net_amount",
+        "base_rate", "base_net_rate", "base_amount", "base_net_amount", "stock_uom_rate",
+        "is_free_item", "is_alternative", "has_alternative_item", "valuation_rate", "gross_profit",
+        "weight_per_unit", "total_weight", "against_blanket_order", "blanket_order_rate", "projected_qty",
+        "page_break", "draft_so_created", "custom_price_after_discount", "custom_price_before_discount", "custom_free_item_qty",
+        "custom_amount_after_discount", "custom_amount_before_discount", "docstatus", "idx", "qty",
+        "conversion_factor", "stock_qty", "price_list_rate", "base_price_list_rate", "margin_rate_or_amount",
+        "rate_with_margin", "modified_by", "owner", "blanket_order", "custom_free_item_name",
+        "item_code", "customer_item_code", "item_name", "description", "item_group",
+        "brand", "image", "prevdoc_doctype", "stock_uom", "uom",
+        "prevdoc_docname", "pricing_rules", "custom_free_item_uom", "name", "margin_type",
+        "item_tax_rate", "additional_notes", "custom_free_item_code", "parent", "parentfield",
+        "parenttype", "weight_uom", "warehouse", "custom_division", "item_tax_template"
+    ],
+    "tabsalesorder" : [
+        "base_total_taxes_and_charges", "total_taxes_and_charges", "base_grand_total", "base_rounding_adjustment", "base_rounded_total",
+        "docstatus", "grand_total", "rounding_adjustment", "per_delivered", "per_billed",
+        "per_picked", "rounded_total", "po_date", "amount_eligible_for_commission", "commission_rate",
+        "total_commission", "loyalty_points", "loyalty_amount", "from_date", "to_date", "plc_conversion_rate", "base_discount_amount",
+        "is_internal_customer", "ignore_pricing_rule", "additional_discount_percentage", "discount_amount", "idx",
+        "skip_delivery_note", "total_qty", "total_net_weight", "base_total", "base_net_total",
+        "total", "net_total", "creation", "valid_till", "modified",
+        "custom_draft_delivery_note_created", "transaction_date", "delivery_date", "is_synchronizing", "unpaid_credit_limit",
+        "credit_limit_amount", "remaining_credit_limit", "conversion_rate", "delivery_status", "billing_status",
+        "sales_partner", "auto_repeat", "letter_head", "select_print_heading", "language",
+        "represents_company", "source", "inter_company_order_reference", "campaign",
+        "branch_code", "division", "branch", "custom_credit_limit_status", "address",
+        "name", "sales_invoice_overdue", "modified_by", "owner", "title",
+        "naming_series", "customer", "customer_name", "tax_id", "order_type",
+        "po_no", "company", "amended_from", "cost_center", "project",
+        "currency", "selling_price_list", "price_list_currency", "scan_barcode", "set_warehouse",
+        "tax_category", "taxes_and_charges", "shipping_rule", "incoterm", "named_place",
+        "base_in_words", "in_words", "apply_discount_on", "coupon_code", "other_charges_calculation",
+        "customer_address", "address_display", "customer_group", "territory", "contact_person",
+        "contact_display", "contact_phone", "contact_mobile", "contact_email", "shipping_address_name",
+        "shipping_address", "dispatch_address_name", "dispatch_address", "company_address", "company_address_display",
+        "payment_terms_template", "tc_name", "terms", "status"
+    ],
+    "tabsales order item" : [
+        "stock_qty", "creation", "modified", "base_price_list_rate", "margin_rate_or_amount",
+        "rate_with_margin", "discount_percentage", "discount_amount", "base_rate_with_margin", "rate",
+        "amount", "base_rate", "base_amount", "stock_uom_rate", "is_free_item",
+        "grant_commission", "net_rate", "net_amount", "base_net_rate", "base_net_amount",
+        "billed_amt", "valuation_rate", "gross_profit", "delivered_by_supplier", "weight_per_unit",
+        "total_weight", "against_blanket_order", "blanket_order_rate", "projected_qty", "actual_qty",
+        "ordered_qty", "planned_qty", "production_plan_qty", "work_order_qty", "delivered_qty",
+        "produced_qty", "returned_qty", "picked_qty", "page_break", "transaction_date",
+        "loaded_qty", "docstatus", "idx", "ensure_delivery_based_on_produced_serial_no", "delivery_date",
+        "qty", "conversion_factor", "price_list_rate", "modified_by", "owner",
+        "division", "custom_division", "item_code", "customer_item_code", "branch",
+        "address", "item_name", "description", "item_group", "brand",
+        "image", "additional_notes", "stock_uom", "uom", "supplier",
+        "name", "salesman", "item_tax_rate", "margin_type", "weight_uom",
+        "warehouse", "target_warehouse", "prevdoc_docname", "quotation_item", "salesman_name",
+        "blanket_order", "item_tax_template", "material_request", "bom_no", "pricing_rules",
+        "purchase_order", "material_request_item", "purchase_order_item", "parent", "parentfield",
+        "parenttype"
+    ],
+    "tabdelivery note" : [
+        "total_taxes_and_charges", "per_returned", "base_grand_total", "base_rounding_adjustment", "base_rounded_total",
+        "modified", "grand_total", "rounding_adjustment", "lr_date", "rounded_total",
+        "po_date", "plc_conversion_rate", "amount_eligible_for_commission", "commission_rate", "total_commission",
+        "disable_rounded_total", "ignore_pricing_rule", "print_without_amount", "group_same_items", "base_discount_amount",
+        "additional_discount_percentage", "is_internal_customer", "discount_amount", "docstatus", "is_return",
+        "issue_credit_note", "idx", "total_qty", "total_net_weight", "base_total",
+        "base_net_total", "total", "net_total", "creation", "posting_date",
+        "posting_time", "invoice_received_from_driver", "invoice_received_from_tl", "conversion_rate", "set_posting_time",
+        "custom_creation_date", "custom_valid_till", "custom_delivery_date", "per_billed", "is_synchronized",
+        "base_total_taxes_and_charges", "per_installed", "custom_is_creating_sales_invoice", "is_synchronizing_to_crm", "is_synchronizing_to_whm",
+        "is_synchronized_to_whm", "is_synchronized_to_crm", "gross_total", "auto_repeat", "letter_head",
+        "select_print_heading", "language", "represents_company", "inter_company_reference", "customer_group",
+        "territory", "division", "branch", 
+        "custom_sales_return", "address", "payment_terms_template",
+        "custom_branch_code", "lr_no", "modified_by", "owner", "title",
+        "naming_series", "customer", "tax_id", "customer_name", "company",
+        "amended_from", "return_against", "cost_center", "project", "currency",
+        "selling_price_list", "price_list_currency", "scan_barcode", "pick_list", "set_warehouse",
+        "set_target_warehouse", "tax_category", "taxes_and_charges", "shipping_rule", "incoterm",
+        "named_place", "base_in_words", "in_words", "apply_discount_on", "other_charges_calculation",
+        "customer_address", "address_display", "contact_person", "contact_display", "contact_mobile",
+        "contact_email", "shipping_address_name", "shipping_address", "dispatch_address_name", "dispatch_address",
+        "company_address", "company_address_display", "tc_name", "terms", "status",
+        "installation_status", "transporter", "driver", "name", "vehicle_no",
+        "transporter_name", "driver_name", "po_no", "sales_partner"
+    ],
+    "tabdelivery note item" : [
+        "incoming_rate", "weight_per_unit", "total_weight", "qty", "idx",
+        "creation", "conversion_factor", "stock_qty", "returned_qty", "price_list_rate",
+        "base_price_list_rate", "has_item_scanned", "margin_rate_or_amount", "rate_with_margin", "discount_percentage",
+        "actual_batch_qty", "actual_qty", "installed_qty", "discount_amount", "packed_qty",
+        "received_qty", "base_rate_with_margin", "allow_zero_valuation_rate", "rate", "amount",
+        "base_rate", "base_amount", "modified", "stock_uom_rate", "page_break",
+        "is_free_item", "grant_commission", "net_rate", "net_amount", "docstatus",
+        "custom_order_qty", "custom_sent_qty", "base_net_rate", "custom_length", "custom_depth",
+        "custom_width", "custom_total_volume", "base_net_amount", "billed_amt", "custom_salesman_name",
+        "modified_by", "owner", "barcode", "item_code", "item_name",
+        "customer_item_code", "description", "brand", "item_group", "image",
+        "stock_uom", "uom", "margin_type", "pricing_rules", "item_tax_template",
+        "weight_uom", "warehouse", "target_warehouse", "quality_inspection", "against_sales_order",
+        "so_detail", "against_sales_invoice", "si_detail", "dn_detail", "pick_list_item",
+        "batch_no", "serial_no", "item_tax_rate", "expense_account", "material_request",
+        "purchase_order", "purchase_order_item", "material_request_item", "cost_center", "project",
+        "parent", "parentfield", "parenttype", "division", "branch",
+        "address", "custom_salesman", "name"
+    ],
+    "tabsales invoice" : [
+        "loyalty_amount", "is_pos", "update_stock", "idx", "is_consolidated",
+        "total_qty", "total_net_weight", "base_total", "base_net_total", "total",
+        "net_total", "is_return", "creation", "update_billed_amount_in_sales_order", "update_billed_amount_in_delivery_note",
+        "is_debit_note", "base_total_taxes_and_charges", "ignore_default_payment_terms_template", "total_taxes_and_charges", "base_grand_total",
+        "base_rounding_adjustment", "base_rounded_total", "po_date", "modified", "grand_total",
+        "rounding_adjustment", "use_company_roundoff_cost_center", "rounded_total", "docstatus", "amount_eligible_for_commission",
+        "commission_rate", "total_commission", "total_advance", "group_same_items", "outstanding_amount",
+        "disable_rounded_total", "from_date", "posting_date", "to_date", "base_discount_amount",
+        "is_cash_or_non_trade_discount", "posting_time", "additional_discount_percentage", "discount_amount", "conversion_rate",
+        "is_internal_customer", "is_discounted", "total_billing_hours", "repost_required", "total_billing_amount",
+        "set_posting_time", "base_paid_amount", "paid_amount", "base_change_amount", "change_amount",
+        "due_date", "allocate_advances_automatically", "custom_is_synchronized", "only_include_allocated_payments", "need_invoice_exchange",
+        "invoice_exchange_date", "write_off_amount", "base_write_off_amount", "write_off_outstanding_amount_automatically", "plc_conversion_rate",
+        "is_synchronizing", "is_debit_note_for_claim", "custom_si_had_tin_before", "ignore_pricing_rule", "redeem_loyalty_points",
+        "linking_sales_invoice_to_tax_invoice_number", "loyalty_points" , "division", "branch", "address",
+        "custom_return_reference", "custom_branch_code", "in_words_translated", "claim_id", "tax_invoice_number",
+        "tax_additional_description", "tax_additional_reference", "name", "overdays", "modified_by",
+        "owner", "title", "naming_series", "customer", "customer_name",
+        "tax_id", "company", "company_tax_id", "pos_profile", "return_against",
+        "amended_from", "cost_center", "project", "currency", "selling_price_list",
+        "price_list_currency", "scan_barcode", "set_warehouse", "set_target_warehouse", "tax_category",
+        "taxes_and_charges", "shipping_rule", "incoterm", "named_place", "base_in_words",
+        "in_words", "apply_discount_on", "additional_discount_account", "other_charges_calculation", "cash_bank_account",
+        "account_for_change_amount", "write_off_account", "write_off_cost_center", "loyalty_program", "loyalty_redemption_account",
+        "loyalty_redemption_cost_center", "customer_address", "address_display", "contact_person", "contact_display",
+        "contact_mobile", "contact_email", "territory", "shipping_address_name", "shipping_address",
+        "dispatch_address_name", "dispatch_address", "company_address", "company_address_display", "payment_terms_template",
+        "tc_name", "terms", "po_no", "debit_to", "party_account_currency",
+        "is_opening", "unrealized_profit_loss_account", "against_income_account", "sales_partner", "letter_head",
+        "select_print_heading", "language", "auto_repeat", "status", "inter_company_invoice_reference",
+        "campaign", "represents_company", "source", "customer_group", "remarks"
+    ],
+    "tabsales invoice item" : [
+        "idx", "creation", "conversion_factor", "stock_qty", "price_list_rate", "service_stop_date", "enable_deferred_revenue",
+        "service_start_date", "service_end_date", "weight_per_unit", "total_weight", "base_price_list_rate", "has_item_scanned", "margin_rate_or_amount",
+        "rate_with_margin", "discount_percentage", "incoming_rate", "allow_zero_valuation_rate", "discount_amount", "base_rate_with_margin", "actual_batch_qty",
+        "actual_qty",  "rate",  "amount",  "modified",  "base_rate", "base_amount",  "delivered_qty",  "docstatus", "stock_uom_rate", "is_free_item", "grant_commission",
+        "page_break", "net_rate", "net_amount", "base_net_rate", "base_net_amount", "delivered_by_supplier", "qty", "is_fixed_asset",
+        "parenttype", "division", "branch", "address", "name", "custom_salesman", "modified_by", "owner", "barcode", "item_code", "item_name",
+        "customer_item_code", "description", "item_group", "brand", "image", "stock_uom", "uom", "margin_type", "item_tax_template", "pricing_rules", "income_account",
+        "asset", "finance_book","expense_account","discount_account", "deferred_revenue_account",  "weight_uom",  "warehouse", "target_warehouse", "quality_inspection",
+        "batch_no", "serial_no", "item_tax_rate", "sales_order", "so_detail", "sales_invoice_item", "delivery_note", "dn_detail",
+        "purchase_order", "purchase_order_item", "cost_center", "project", "parent", "parentfield"
+    ],
+    "tabcustomer" : [
+        "last_sales_transaction", "custom_is_synchronized", "custom_allow_return_on_customer", "is_frozen", "custom_allow_payment_to_collector", "need_invoice_exchange",
+        "disabled", "is_internal_customer", "docstatus", "idx", "creation", "customer_pkp",
+        "modified", "joining_date", "custom_is_synchronizing_customer_finance", "exclude_delivery_note_auto_submission", "default_commission_rate", "so_required",
+        "service_level", "allow_order_without_pjp", "dn_required", "website", "language", "customer_details",
+        "customer_primary_contact", "mobile_no", "email_id", "customer_primary_address", "primary_address", "tax_id",
+        "tax_category", "tax_withholding_category", "payment_terms", "loyalty_program", "loyalty_program_tier", "default_sales_partner",
+        "custom_id_card_image", "custom_npwp_image", "custom_collector", "origin_branch", "longitude", "latitude",
+        "npwp_name", "npwp_no", "npwp_address", "company_name_tax_id", "company_address_tax_id", "default_sales_taxes_and_charges_template",
+        "default_taxes_and_charges_template", "name", "customer_main_channel", "modified_by", "owner", "naming_series",
+        "salutation", "customer_name", "customer_type", "customer_group", "territory", "gender",
+        "lead_name", "opportunity_name", "account_manager", "image", "default_price_list", "default_bank_account",
+        "default_currency", "represents_company", "market_segment", "industry", "customer_pos_id"
+    ],
+    "tabdivision" : [
+        "creation", "modified", "docstatus", "idx", "lft", "rgt",
+        "is_group", "old_parent", "parent_division", "division_head", "company_name",
+        "division_code", "name", "sub_channel"
+    ],
+    "tabbranch" : [
+        "creation", "modified", "docstatus", "idx", "is_synchronized", "ready_to_create_sales_order_at_cutoff_time",
+        "address", "branch_code", "phone", "custom_regional",
+        "custom_assembly_warehouse", "custom_in_transit_warehouse", "custom_standard_warehouse", "custom_bonus_warehouse", "custom_bad_stock_warehouse", "custom_allocation_warehouse",
+        "customer_payment_bank_account", "customer_giro_bank_account", "queueing_progress", "address_line", "mode_of_payment", "kas_titipan_account",
+        "return_from_center", "name", "return_from_depo", "branch"
+    ],
+    "tabsales person" : [
+        "modified", "docstatus", "is_group", "enabled", "idx", "creation",
+        "is_synchronized", "naming_series", "branch", "name", "branch_code", "modified_by",
+        "owner", "sales_person_name", "parent_sales_person", "commission_rate", "employee", "department",
+        "old_parent"
+    ],
+    "tabitem" : [
+        "is_sales_item", "creation", "modified", "opening_stock", "valuation_rate", "standard_rate",
+        "is_fixed_asset", "auto_create_assets", "is_grouped_asset", "over_delivery_receipt_allowance", "over_billing_allowance", "shelf_life_in_days",
+        "end_of_life", "weight_per_unit", "allow_negative_stock", "has_batch_no", "create_new_batch", "has_expiry_date",
+        "retain_sample", "sample_quantity", "has_serial_no", "enable_deferred_expense", "no_of_months_exp", "enable_deferred_revenue",
+        "no_of_months", "min_order_qty", "safety_stock", "is_purchase_item", "lead_time_days", "last_purchase_rate",
+        "is_customer_provided_item", "delivered_by_supplier", "grant_commission", "max_discount", "inspection_required_before_purchase", "inspection_required_before_delivery",
+        "is_sub_contracted_item", "published_in_website", "total_projected_qty", "max_stock_level", "min_stock_level", "docstatus",
+        "idx", "disabled", "allow_alternative_item", "is_stock_item", "has_variants", "include_item_in_manufacturing",
+        "modified_by", "owner", "customs_tariff_number", "sales_uom", "naming_series", "item_code",
+        "item_name", "item_group", "stock_uom", "name", "serial_no_series",
+        "purchase_uom", "item_packaging", "asset_category", "asset_naming_series", "default_bom", "customer_code",
+        "image", "description", "brand", "default_item_manufacturer", "default_manufacturer_part_no", "default_material_request_type",
+        "valuation_method", "warranty_period", "short_item_name", "weight_uom", "customer", "custom_division",
+        "country_of_origin", "batch_number_series"
+    ],
+    "tabitem group" : [
+        "include_descendants", "weightage", "is_group", "lft", "rgt", "docstatus",
+        "idx", "creation", "modified", "show_in_website", "is_bonus_item", "description",
+        "item_group_name", "parent_item_group", "image", "route", "website_title", "name",
+    ]
+}
+
+# Create system prompt with proper schema formatting
+system_prompt = f"""You are an intelligent SQL assistant that translates natural language questions into valid PostgreSQL SELECT statements.
+You are working with a relational database using the provided schema.
+
+IMPORTANT RULES:
+- You must ONLY respond with the SQL query. NO explanations, NO descriptions, NO additional text.
+- Table names must be enclosed in double quotes and use EXACTLY the same names as provided in the database schema keys.
+- Do not include markdown code blocks or any formatting - just the raw SQL query.
+- Ensure all SQL you return is syntactically valid and compatible with PostgreSQL.
+- Use table aliases for clarity when needed.
+- Avoid JOINs that might exclude data unless necessary.
+
+Database Schema:
+{json.dumps(database_schema, indent=2)}
+"""
+
+def generate_sql_query(user_question):
+    """Generate SQL query using OpenRouter via OpenAI client"""
+    try:
+        completion = client.chat.completions.create(
+            extra_headers={
+                "HTTP-Referer": "https://localhost:3000",
+                "X-Title": "SQL Assistant",
+            },
+            model="deepseek/deepseek-chat-v3-0324:free",
+            messages=[
+                {
+                    "role": "system",
+                    "content": system_prompt
+                },
+                {
+                    "role": "user",
+                    "content": user_question
+                }
+            ],
+            max_tokens=1000,
+            temperature=0.1
+        )
+        
+        # Check if completion exists
+        if completion is None:
+            return "Error: No completion received from API"
+        
+        # Check if choices attribute exists
+        if not hasattr(completion, 'choices'):
+            return "Error: No choices in API response"
+        
+        # Check if choices is not None and has content
+        if completion.choices is None or len(completion.choices) == 0:
+            return "Error: Empty choices in API response"
+        
+        # Check if first choice has message
+        if not hasattr(completion.choices[0], 'message') or completion.choices[0].message is None:
+            return "Error: No message in API response"
+        
+        # Extract and clean the SQL query
+        sql_query = completion.choices[0].message.content
+        if sql_query is None or sql_query.strip() == "":
+            return "Error: Empty content in API response"
+        
+        # Remove markdown code blocks if present
+        sql_query = sql_query.replace('```sql', '').replace('```', '')
+        # Remove any explanatory text before the query
+        lines = sql_query.strip().split('\n')
+        # Find the line that starts with SELECT
+        for i, line in enumerate(lines):
+            if line.strip().upper().startswith('SELECT'):
+                # Return from SELECT onwards
+                return '\n'.join(lines[i:]).strip()
+        # If no SELECT found, return the cleaned query
+        return sql_query.strip()
+        
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+if __name__ == "__main__":
+    # Simple execution - just generate and print SQL
+    sql_result = generate_sql_query("Saya ingin melihat produk apa saja yang sering di return oleh customer")
+    print(sql_result)
